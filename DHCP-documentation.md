@@ -298,9 +298,8 @@ For this lab, I will be installing the DHCP Server Role on DC1 as the partner DH
 # Troubleshoot common DHCP scenarios  
 For the following scenarios, I created a fun script that randomizes what issue you may encounter when dealing with DHCP servers. These are the most common scenarios when dealing with DHCP. Have fun!!!
 
-The following are common scenarios that I came across in my professional career
 1) Workstation receiving APIPA (Auotmatic Private IP Addressing)
-This is probably the most common troubleshooting issue that you will come across. I came across this issue when working the helpdesk. You can easily identify it, as the IP starts with 169.x.x.x
+This is probably the most common troubleshooting issue that you will come across. I came across this issue when working the helpdesk. You can easily identify it, as the IP starts with 169.254.x.x
 
 Causes: DHCP Scope Exhausted, DHCP Server/Service is down, Firewall blocking DHCP traffic, Network 
 Connectivity (wired/wireless)
@@ -329,7 +328,7 @@ Another common issue with the failover relatioship not working.
 Causes: Failover misconfigurations, Primary DHCP Server/Service offline, Partner DHCP Server/Service is offline, Network connectivity
 
 Commands to use:
-  Get-DHCPServer4Failover
-  Get-DHCPServer4Scope
+  Get-DHCPServerv4Failover
+  Get-DHCPServerv4Scope
   Get-Service DHCPServer
   Test-NetConnection X.X.X.X(DHCP Server)
