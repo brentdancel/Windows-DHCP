@@ -157,12 +157,179 @@ End IP Address: 192.168.0.254
   <em>DHCP Address accquired</em>
 </p>
 
-# Install Additional DHCP Server  
+# Implement and Test Failover Solution  
 It is best to have two of anything. This allows for high availability and redundancy  
 There are two modes for configuring failover:  
-Hot Standby - One DHCP Server on, One DHCP Server off  (If one fails, the other becomes active)
-Load Balance - Both DHCP Servers on  (Both distribute DHCP traffic)
+Hot Standby - One DHCP Server on, One DHCP Server off  (If one fails, the other becomes active)  
+Load Balance - Both DHCP Servers on  (Both distribute DHCP traffic and one server becomes primary if other fails)
 
-# Implement and Test Failover Solution  
+For this lab, I will be installing the DHCP Server Role on DC1 as the partner DHCP server and test the Hot Standby feature  
+1) On DC1 VM, install DHCP Server Role
+
+<p align="center">
+  <img src="screenshots/19-DHCPServerInstall.png" width="800">
+  <br>
+  <em>DHCP Install on DC1</em>
+</p>
+
+2) Complete Post-Install of DHCP Server Role
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="screenshots/20-DHCPPostInstall-1.png" width="400">
+      <br>
+      <em>DHCP Post-Install</em>
+    </td>
+    <td align="center">
+      <img src="screenshots/21-DHDCPPostInstall-2.png" width="400">
+      <br>
+      <em>DHCP Post-Install Warning</em>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="screenshots/22-DHCPPostInstall-Complete.png" width="800">
+  <br>
+  <em>Final Confirmation of DHCP Install on DC1</em>
+</p>
+
+3) On Server1 VM, click on Tools -> DHCP
+4) In the "DHCP" window, double click on DHCP server -> Right Click on IPv4 -> Select "Configure Failover"
+
+<p align="center">
+  <img src="screenshots/23-ConfigureFailover.png" width="800">
+  <br>
+  <em>Failover Feature within DHCP Tool</em>
+</p>
+
+5) Select the DHCP Scopes
+
+<p align="center">
+  <img src="screenshots/24-Failover-Scopes.png" width="800">
+  <br>
+  <em>Selecting the desirec DHCP scope for failover</em>
+</p>
+
+6) Select DC1 as the partner server
+
+<p align="center">
+  <img src="screenshots/25-Partner-Server.png" width="800">
+  <br>
+  <em>Selecting DC1 as the DHCP Partner Server</em>
+</p>
+
+7) At the "Create a new failover relationship" portion, I will use the Hot Standby Mode
+  - Name the failover relationship as desired
+  - One DHCP Server stays active; Partner DHCP Server is on standby in case of the primary DHCP Server fails
+  - Maximum Client Lead Time is set at 1 hour (best for normal environments); I will be setting it at 5 min for lab purposes
+    - safety timer that prevents two DHCP servers from giving out the same IP address
+  - State Switchover Internal is disabled by default
+    - timer that tells your DHCP server how long to wait before automatically declaring its partner server is down.
+  - WRITE DOWN AND REMEMBER THE SHARED SECRET
+
+<p align="center">
+  <img src="screenshots/26-ConfiguringFailover.png" width="800">
+  <br>
+  <em>DHCP Failover Configuration</em>
+</p>
+
+8) Review and confirm failover settings
+
+<p align="center">
+  <img src="screenshots/27-FailoverSettings.png" width="800">
+  <br>
+  <em>Final Confirmation Screen</em>
+</p>
+
+9) Go back to DC1 and verify if failover relationship has appeared
+
+<p align="center">
+  <img src="screenshots/28-DC1-FailoverScope.png" width="800">
+  <br>
+  <em>DC1 DHCP Failover Success</em>
+</p>
+
+10) To test the failover, double check if Win11 Client VM is still on. If not, turn it on
+11) Verify if Win11 VM is receiving a DHCP address
+
+<p align="center">
+  <img src="screenshots/29-Win11Client.png" width="800">
+  <br>
+  <em>Win11 Client Device still receiving DHCP IP from Server1</em>
+</p>
+
+12) Turn off Server1 VM
+13) Go back to DC1 to verify if the DHCP service is active
+
+<p align="center">
+  <img src="screenshots/30-DC1Failover-Success.png" width="800">
+  <br>
+  <em>DC1 DHCP Service Up and Running</em>
+</p>
+
+14) Go back to Win11 Client VM to see if a new DHCP address is assigned
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="screenshots/31-Win11NewIP.png" width="400">
+      <br>
+      <em>Win11 receiving a DHCP address from Win11</em>
+    </td>
+    <td align="center">
+      <img src="screenshots/32-Win11Commands.png" width="400">
+      <br>
+      <em>Testing DC1 by inputting ipconfig commands into Win11 Client VM</em>
+    </td>
+  </tr>
+</table>
+
+
+15) After verifying successful failover of DHCP, turn Server1 VM back on to verify if DHCP service still works
+
+<p align="center">
+  <img src="screenshots/33-Server1Works.png" width="800">
+  <br>
+  <em>Server1 DHCP still works!</em>
+</p>
 
 # Troubleshoot common DHCP scenarios  
+For the following scenarios, I created a fun script that randomizes what issue you may encounter when dealing with DHCP servers. These are the most common scenarios when dealing with DHCP. Have fun!!!
+
+The following are common scenarios that I came across in my professional career
+1) Workstation receiving APIPA (Auotmatic Private IP Addressing)
+This is probably the most common troubleshooting issue that you will come across. I came across this issue when working the helpdesk. You can easily identify it, as the IP starts with 169.x.x.x
+
+Causes: DHCP Scope Exhausted, DHCP Server/Service is down, Firewall blocking DHCP traffic, Network 
+Connectivity (wired/wireless)
+
+What I would do:
+  On the client device, I will run these preliminary commands
+    ipconfig /all
+    ipconfig /release
+    ipconfig /renew
+    ping X.X.X.X (known server IP or DHCP Server IP)
+
+2) Client receiving a DHCP address but cannot access the Internet
+Say that your client device does receive a DHCP address. However, it cannot connect to external resources or an organization's resources.
+
+Causes: incorrect default gateway, incorrect DNS Server Address, incorrect subnet mask, incorrect DHCP scope configurations
+
+Commands to use:
+  ipconfig /all
+  ping x.x.x.x (default gateway/DNS/website/known IP)
+  tracert x.x.x.x (website/known IP)
+
+
+3) DHCP Failover does not work
+Another common issue with the failover relatioship not working.
+
+Causes: Failover misconfigurations, Primary DHCP Server/Service offline, Partner DHCP Server/Service is offline, Network connectivity
+
+Commands to use:
+  Get-DHCPServer4Failover
+  Get-DHCPServer4Scope
+  Get-Service DHCPServer
+  Test-NetConnection X.X.X.X(DHCP Server)
